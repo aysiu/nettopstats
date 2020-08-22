@@ -1,0 +1,159 @@
+#!/usr/bin/python3
+
+import argparse
+from collections import OrderedDict 
+import csv
+from datetime import datetime
+import json
+from operator import getitem
+import os
+from subprocess import PIPE, Popen
+import sys
+
+output_dir = os.path.expanduser('~/Library/Application Support/nettopstats')
+
+nettop = '/usr/bin/nettop'
+
+def files_dirs_valid(nettop, output_dir):
+    # Make sure the nettop binary exists
+    if not os.path.isfile(nettop):
+        print('{} does not exist. Aborting...'.format(nettop))
+        return False
+    # Make sure the output director exists
+    try:
+        os.makedirs(output_dir, mode=0o755, exist_ok=True)
+    except:
+        print('Unable to create {}'.format(output_dir))
+        return False
+    return True
+
+def get_current_stats(nettop):
+    # Get current nettop info
+    cmd = [ nettop, '-L', '1' ]
+    p = Popen(cmd, stdout=PIPE, stdin=PIPE, stderr=PIPE, encoding='utf8')
+    out, err = p.communicate()
+    if err:
+        print('Error is {}'.format(err))
+        sys.exit(1)
+    else:
+        current_stats = {}
+        output = csv.reader(out.splitlines(), delimiter=',')
+        for output_line in output:
+            process_dict = output_line[1].split('.')
+            if len(process_dict) == 2:
+                process_name = process_dict[0]
+            else:
+                process_name = output_line[1]
+            if process_name.startswith('udp') or process_name.startswith('tcp') or \
+                    process_name.strip() == '':
+                continue
+            bytes_in = int(output_line[4])
+            bytes_out = int(output_line[5])
+            if bytes_in > 0 and bytes_out > 0:
+                current_stats[process_name] = {'bytes_in': bytes_in, 'bytes_out': bytes_out}
+        return current_stats
+
+def add_to_current_data(output_dir, current_stats):
+    log_file = os.path.join(output_dir, (datetime.utcnow().strftime('%Y-%m.json')))
+    if os.path.isfile(log_file):
+        print('{} exists. Updating...'.format(log_file))
+        try:
+            infile = open(log_file, 'r')
+        except:
+            print('Unable to open {}'.format(log_file))
+            sys.exit(1)
+        try:
+            old_stats = json.load(infile)
+        except:
+            print('Unable to read {}'.format(log_file))
+            sys.exit(1)
+        for current_process in current_stats.keys():
+            if current_process in old_stats.keys():
+                new_bytes_in = int(current_stats[current_process]['bytes_in']) + \
+                    int(old_stats[current_process]['bytes_in'])
+                new_bytes_out = int(current_stats[current_process]['bytes_out']) + \
+                    int(old_stats[current_process]['bytes_out'])
+                old_stats[current_process]['bytes_in'] = new_bytes_in
+                old_stats[current_process]['bytes_out'] = new_bytes_out
+            else:
+                old_stats[current_process] = current_stats[current_process]
+        infile.close()
+        try:
+            outfile = open(log_file, 'w')
+        except:
+            print('Unable to open {}'.format(log_file))
+            sys.exit(1)
+        try:
+            json.dump(old_stats, outfile)
+        except:
+            print('Unable to write back changes to {}'.format(log_file))
+            sys.exit(1)
+        outfile.close()
+    else:
+        print('{} does not yet exist. Creating...'.format(log_file))
+        try:
+            outfile = open(log_file, 'w')
+        except:
+            print('Unable to create {}'.format(log_file))
+            sys.exit(1)
+        try:
+            json.dump(current_stats, outfile)
+        except:
+            print('Unable to write to {}'.format(log_file))
+            sys.exit(1)
+        outfile.close()
+
+def human_readable(bytes_in):
+    thresholds = [ 'B', 'KB', 'MB', 'GB', 'TB' ]
+    counter = 0
+    threshold = 1000
+    while bytes_in > threshold:
+        counter +=1
+        threshold = 1000**(counter+1)
+    readable_bytes = str(round(bytes_in/(1000**(counter)),2)) + ' ' + thresholds[counter]
+    return readable_bytes
+
+def present_analysis(output_dir):
+    for root, subdirs, files in os.walk(output_dir):
+        for subdir in subdirs:
+            if subdir.startswith('.'):
+                continue
+        for file in sorted(files, reverse=True):
+            if file.startswith('.'):
+                continue
+            full_path = os.path.join(root, file)
+            print('\nStats for {}\n'.format(file.replace('.json', '')))
+            try:
+                infile = open(full_path, 'r')
+            except:
+                print('Unable to open {}'.format(file))
+                sys.exit(1)
+            try:
+                old_stats = json.load(infile)
+            except:
+                print('Unable to read {}'.format(file))
+                sys.exit(1)
+            results_in = OrderedDict(sorted(old_stats.items(), key = lambda x: \
+                    getitem(x[1], 'bytes_in'), reverse=True))
+            for process_name in results_in.keys():
+                print('{} ... downloaded {} ... and uploaded {}'.format(process_name, \
+                        human_readable(results_in[process_name]['bytes_in']), \
+                        human_readable(results_in[process_name]['bytes_out'])))
+
+def main():
+    # Make sure the necessary files and directories exist
+    if not files_dirs_valid(nettop, output_dir):
+        sys.exit(1)
+    # See if this is called to analyze the data
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--analyze", help="Show what's been using the most bandwidth", \
+            action="store_true")
+    args = parser.parse_args()
+    if args.analyze:
+        present_analysis(output_dir)
+    else:
+        current_stats = get_current_stats(nettop)
+        add_to_current_data(output_dir, current_stats)
+
+if __name__ == "__main__":
+    main()

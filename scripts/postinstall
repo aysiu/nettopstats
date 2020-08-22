@@ -1,0 +1,13 @@
+#!/bin/zsh
+
+launchagent='com.github.nettopstats'
+
+current_user=$(/usr/bin/stat -f %Su /dev/console)
+
+if [[ "$current_user" != "root" && "$current_user" != "_mbsetupuser" && "$current_user" != "" ]]; then
+
+    launchctl_status=$(/usr/bin/su -l "$current_user" -c "/bin/launchctl list | /usr/bin/grep $launchagent")
+    if [[ -z "$launchctl_status" ]]; then
+        /usr/bin/su -l "$current_user" -c "/bin/launchctl load -w /Library/LaunchAgents/$launchagent.plist"
+    fi
+fi
