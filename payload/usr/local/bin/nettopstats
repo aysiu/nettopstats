@@ -136,6 +136,8 @@ def present_analysis(output_dir, period):
         print('Analyzing bandwidth by month...')
         # Initialize test variable
         current_month = 0
+        # Initialize list of months displayed
+        months_displayed = []
     for root, subdirs, files in os.walk(output_dir):
         for subdir in subdirs:
             if subdir.startswith('.'):
@@ -164,6 +166,7 @@ def present_analysis(output_dir, period):
                 file_month = file.split('-')[1] + '/' + file.split('-')[0] 
                 if current_month != file_month and current_month != 0:
                     print('\nMonth {}'.format(current_month))
+                    months_displayed.append(current_month)
                     display_stats(old_stats)
                     old_stats = {}
                 else:
@@ -171,7 +174,7 @@ def present_analysis(output_dir, period):
                 current_month = file_month
     # If it's monthly, display the last month or partial month
     if period != 'daily':
-        if current_month != 0:
+        if current_month != 0 and current_month not in months_displayed:
             print('\nMonth {}'.format(current_month))
             old_stats = merge_dicts(old_stats, new_stats)
             display_stats(old_stats)
