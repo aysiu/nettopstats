@@ -26,5 +26,7 @@ If you want to analyze the results later, run `/usr/local/bin/nettopstats --anal
 ## How accurate is this tool?
 Not 100% accurate, to be honest. Keep in mind, since it's running every 2 seconds and not all the time in the background, the data may be useful (just to see what processes are using the most bandwidth), but the total bytes in and total bytes out won't precisely reflect actual usage. Some bytes in and out won't be captured fully by a check that happens only every 2 seconds.
 
+Also, standard Python (you can import special libraries) is annoying with time zones, so the by-day .json log is by whatever the time is in UTC, so you may start seeing data not exactly line up with today or yesterday, but if you just want to know roughly what's using the most bandwidth, it may not matter. Just something to keep in mind.
+
 ## What kind of support is there for nettopstats?
 Right now? None. This is kind of released as is. If it works for you, great! If it doesn't, I hope you find something else. See a bug you want to fix, make a pull request, and I'll likely review it.
