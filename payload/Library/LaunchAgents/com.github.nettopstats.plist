@@ -11,7 +11,7 @@
 	<key>RunAtLoad</key>
 	<true/>
     <key>StartInterval</key>
-    <integer>2</integer>
+    <integer>10</integer>
     <key>ThrottleInterval</key>
     <integer>0</integer>
 </dict>
