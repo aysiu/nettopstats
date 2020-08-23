@@ -13,7 +13,7 @@ I'd love to be proven wrong, but at least as of the creation of nettopstats, it 
 ## Requirements for nettopstats
 - macOS (tested on 10.15 Catalina but will likely work on other versions).
 - Python 3.7 (currently points to /usr/bin/python3, but you can change that line to point to whatever location you want... may work on Python 3.8 or higher, too)
-- [munkipkg](https://github.com/munki/munki-pkg) (to build the installer package)
+- [munkipkg](https://github.com/munki/munki-pkg) (to build the installer package) **If you're not going to use `/usr/bin/python3`, change the path in the `nettopstats` script to wherever your Python 3 is _before_ you build the pkg**
 
 ## How resource-intensive is this?
 I don't know. This project may be a total failure in terms of resources. I've set it to run every 2 seconds. That's quite often, but it's also just doing a very quick dump of `nettop` output, so it may not be resource-intensive at all.
