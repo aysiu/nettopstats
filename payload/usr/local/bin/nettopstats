@@ -131,12 +131,7 @@ def present_analysis(output_dir, period):
     # If it's daily, process all logs
     if period == 'daily':
         print('Analyzing bandwidth by day...')
-    # If it's weekly, process 7 logs at a time    
-    elif period == 'weekly':
-        print('Analyzing bandwidth by week...')
-        # Initialize counter
-        counter = 0
-    # If it's monthly or if daily or weekly isn't specified, just go with entire months.
+    # If it's monthly or if daily isn't specified, just go with entire months.
     else:
         print('Analyzing bandwidth by month...')
         # Initialize test variable
@@ -164,19 +159,7 @@ def present_analysis(output_dir, period):
             if period == 'daily':
                 print('\n{}'.format(log_name))
                 display_stats(new_stats)
-            # If it's weekly, process 7 logs at a time    
-            elif period == 'weekly':
-                if counter == 0:
-                    week_beginning = log_name
-                if counter < 7:
-                    old_stats = merge_dicts(old_stats, new_stats)
-                    counter += 1
-                else:
-                    print('\nWeek beginning {}'.format(week_beginning))
-                    display_stats(old_stats)
-                    counter = 0
-            # If it's monthly or if daily or weekly isn't specified, just go with
-            # entire months.
+            # If it's monthly or if daily isn't specified, just go with entire months.
             else:
                 file_month = file.split('-')[1]
                 if current_month != file_month and current_month != 0:
@@ -185,13 +168,8 @@ def present_analysis(output_dir, period):
                 else:
                     old_stats = merge_dicts(old_stats, new_stats)
                 current_month = file_month
-    # If it's weekly, display the last partial week  
-    if period == 'weekly':
-        if counter != 0 and counter != 7:
-            print('\nWeek beginning {}'.format(week_beginning))
-            display_stats(old_stats)
     # If it's monthly, display the last month or partial month
-    elif period != 'daily':
+    if period != 'daily':
         if current_month != 0:
             print('\nMonth #{}'.format(current_month))
             display_stats(old_stats)
@@ -204,7 +182,6 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--analyze", help="Show what's been using the most bandwidth. \
         Usage: nettopstats --analyze daily to get daily information, \
-        nettopstats --analyze weekly to get weekly information, or \
         nettopstats --analyze monthly to get montly information")
     args = parser.parse_args()
     if args.analyze:
