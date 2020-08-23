@@ -53,6 +53,19 @@ def get_current_stats(nettop):
                 current_stats[process_name] = {'bytes_in': bytes_in, 'bytes_out': bytes_out}
         return current_stats
 
+def merge_dicts(old_dict, new_dict):
+    for current_process in new_dict.keys():
+        if current_process in old_dict.keys():
+            new_bytes_in = int(new_dict[current_process]['bytes_in']) + \
+                int(old_dict[current_process]['bytes_in'])
+            new_bytes_out = int(new_dict[current_process]['bytes_out']) + \
+                int(old_dict[current_process]['bytes_out'])
+            old_dict[current_process]['bytes_in'] = new_bytes_in
+            old_dict[current_process]['bytes_out'] = new_bytes_out
+        else:
+            old_dict[current_process] = new_dict[current_process]
+    return old_dict
+
 def add_to_current_data(output_dir, current_stats):
     log_file = os.path.join(output_dir, (datetime.utcnow().strftime('%Y-%m-%d.json')))
     if os.path.isfile(log_file):
@@ -67,16 +80,7 @@ def add_to_current_data(output_dir, current_stats):
         except:
             print('Unable to read {}'.format(log_file))
             sys.exit(1)
-        for current_process in current_stats.keys():
-            if current_process in old_stats.keys():
-                new_bytes_in = int(current_stats[current_process]['bytes_in']) + \
-                    int(old_stats[current_process]['bytes_in'])
-                new_bytes_out = int(current_stats[current_process]['bytes_out']) + \
-                    int(old_stats[current_process]['bytes_out'])
-                old_stats[current_process]['bytes_in'] = new_bytes_in
-                old_stats[current_process]['bytes_out'] = new_bytes_out
-            else:
-                old_stats[current_process] = current_stats[current_process]
+        old_stats = merge_dicts(old_stats, current_stats)
         infile.close()
         try:
             outfile = open(log_file, 'w')
@@ -113,7 +117,30 @@ def human_readable(bytes_in):
     readable_bytes = str(round(bytes_in/(1000**(counter)),2)) + ' ' + thresholds[counter]
     return readable_bytes
 
-def present_analysis(output_dir):
+def display_stats(stats):
+    results_in = OrderedDict(sorted(stats.items(), key = lambda x: \
+            getitem(x[1], 'bytes_in'), reverse=True))
+    for process_name in results_in.keys():
+        print('{} ... downloaded {} ... and uploaded {}'.format(process_name, \
+                human_readable(results_in[process_name]['bytes_in']), \
+                human_readable(results_in[process_name]['bytes_out'])))
+
+def present_analysis(output_dir, period):
+    # Initialize empty dictionary
+    old_stats = {}
+    # If it's daily, process all logs
+    if period == 'daily':
+        print('Analyzing bandwidth by day...')
+    # If it's weekly, process 7 logs at a time    
+    elif period == 'weekly':
+        print('Analyzing bandwidth by week...')
+        # Initialize counter
+        counter = 0
+    # If it's monthly or if daily or weekly isn't specified, just go with entire months.
+    else:
+        print('Analyzing bandwidth by month...')
+        # Initialize test variable
+        current_month = 0
     for root, subdirs, files in os.walk(output_dir):
         for subdir in subdirs:
             if subdir.startswith('.'):
@@ -122,23 +149,52 @@ def present_analysis(output_dir):
             if file.startswith('.'):
                 continue
             full_path = os.path.join(root, file)
-            print('\nStats for {}\n'.format(file.replace('.json', '')))
             try:
                 infile = open(full_path, 'r')
             except:
                 print('Unable to open {}'.format(file))
                 sys.exit(1)
             try:
-                old_stats = json.load(infile)
+                new_stats = json.load(infile)
             except:
                 print('Unable to read {}'.format(file))
                 sys.exit(1)
-            results_in = OrderedDict(sorted(old_stats.items(), key = lambda x: \
-                    getitem(x[1], 'bytes_in'), reverse=True))
-            for process_name in results_in.keys():
-                print('{} ... downloaded {} ... and uploaded {}'.format(process_name, \
-                        human_readable(results_in[process_name]['bytes_in']), \
-                        human_readable(results_in[process_name]['bytes_out'])))
+            log_name = file.replace('.json', '')
+            # If it's daily, process all logs
+            if period == 'daily':
+                print('\n{}'.format(log_name))
+                display_stats(new_stats)
+            # If it's weekly, process 7 logs at a time    
+            elif period == 'weekly':
+                if counter == 0:
+                    week_beginning = log_name
+                if counter < 7:
+                    old_stats = merge_dicts(old_stats, new_stats)
+                    counter += 1
+                else:
+                    print('\nWeek beginning {}'.format(week_beginning))
+                    display_stats(old_stats)
+                    counter = 0
+            # If it's monthly or if daily or weekly isn't specified, just go with
+            # entire months.
+            else:
+                file_month = file.split('-')[1]
+                if current_month != file_month and current_month != 0:
+                    print('\nMonth #{}'.format(current_month))
+                    display_stats(old_stats)
+                else:
+                    old_stats = merge_dicts(old_stats, new_stats)
+                current_month = file_month
+    # If it's weekly, display the last partial week  
+    if period == 'weekly':
+        if counter != 0 and counter != 7:
+            print('\nWeek beginning {}'.format(week_beginning))
+            display_stats(old_stats)
+    # If it's monthly, display the last month or partial month
+    elif period != 'daily':
+        if current_month != 0:
+            print('\nMonth #{}'.format(current_month))
+            display_stats(old_stats)
 
 def main():
     # Make sure the necessary files and directories exist
@@ -146,11 +202,13 @@ def main():
         sys.exit(1)
     # See if this is called to analyze the data
     parser = argparse.ArgumentParser()
-    parser.add_argument("--analyze", help="Show what's been using the most bandwidth", \
-            action="store_true")
+    parser.add_argument("--analyze", help="Show what's been using the most bandwidth. \
+        Usage: nettopstats --analyze daily to get daily information, \
+        nettopstats --analyze weekly to get weekly information, or \
+        nettopstats --analyze monthly to get montly information")
     args = parser.parse_args()
     if args.analyze:
-        present_analysis(output_dir)
+        present_analysis(output_dir, args.analyze)
     else:
         current_stats = get_current_stats(nettop)
         add_to_current_data(output_dir, current_stats)
