@@ -165,6 +165,7 @@ def present_analysis(output_dir, period):
                 if current_month != file_month and current_month != 0:
                     print('\nMonth {}'.format(current_month))
                     display_stats(old_stats)
+                    old_stats = {}
                 else:
                     old_stats = merge_dicts(old_stats, new_stats)
                 current_month = file_month
@@ -172,6 +173,7 @@ def present_analysis(output_dir, period):
     if period != 'daily':
         if current_month != 0:
             print('\nMonth {}'.format(current_month))
+            old_stats = merge_dicts(old_stats, new_stats)
             display_stats(old_stats)
 
 def main():
