@@ -54,7 +54,7 @@ def get_current_stats(nettop):
         return current_stats
 
 def add_to_current_data(output_dir, current_stats):
-    log_file = os.path.join(output_dir, (datetime.utcnow().strftime('%Y-%m.json')))
+    log_file = os.path.join(output_dir, (datetime.utcnow().strftime('%Y-%m-%d.json')))
     if os.path.isfile(log_file):
         print('{} exists. Updating...'.format(log_file))
         try:
