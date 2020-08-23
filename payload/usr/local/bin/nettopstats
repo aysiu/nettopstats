@@ -161,9 +161,9 @@ def present_analysis(output_dir, period):
                 display_stats(new_stats)
             # If it's monthly or if daily isn't specified, just go with entire months.
             else:
-                file_month = file.split('-')[1]
+                file_month = file.split('-')[1] + '/' + file.split('-')[0] 
                 if current_month != file_month and current_month != 0:
-                    print('\nMonth #{}'.format(current_month))
+                    print('\nMonth {}'.format(current_month))
                     display_stats(old_stats)
                 else:
                     old_stats = merge_dicts(old_stats, new_stats)
@@ -171,7 +171,7 @@ def present_analysis(output_dir, period):
     # If it's monthly, display the last month or partial month
     if period != 'daily':
         if current_month != 0:
-            print('\nMonth #{}'.format(current_month))
+            print('\nMonth {}'.format(current_month))
             display_stats(old_stats)
 
 def main():
