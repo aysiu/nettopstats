@@ -126,13 +126,13 @@ def display_stats(stats):
                 human_readable(results_in[process_name]['bytes_out'])))
 
 def present_analysis(output_dir, period):
-    # Initialize empty dictionary
-    old_stats = {}
     # If it's daily, process all logs
     if period == 'daily':
         print('Analyzing bandwidth by day...')
     # If it's monthly or if daily isn't specified, just go with entire months.
     else:
+        # Initialize empty dictionary
+        old_stats = {}
         print('Analyzing bandwidth by month...')
         # Initialize test variable
         current_month = 0
