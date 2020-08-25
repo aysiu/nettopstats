@@ -24,7 +24,9 @@ If you build and install the pkg, it should just run by itself, and then dump ou
 If you want to analyze the results later, run `/usr/local/bin/nettopstats --analyze daily` or `/usr/local/bin/nettopstats --analyze monthly`.
 
 ## How accurate is this tool?
-Not 100% accurate, to be honest. Keep in mind, since it's running every 15 seconds and not all the time in the background, the data may be useful (just to see what processes are using the most bandwidth), but the total bytes in and total bytes out won't precisely reflect actual usage. Some bytes in and out won't be captured fully by a check that happens only every 15 seconds.
+Even in theory, not 100% accurate, to be honest. Keep in mind, since it's running every 15 seconds and not all the time in the background, the data may be useful (just to see what processes are using the most bandwidth), but the total bytes in and total bytes out won't precisely reflect actual usage. Some bytes in and out won't be captured fully by a check that happens only every 15 seconds.
+
+From the actual testing I've done so far, the numbers for Google Chrome are wildly inflated, for some reason (hundreds of GB, when it really should be single digits GB), so this seems to be more of a proof-of-concept, at this point.
 
 Also, standard Python (you can import special libraries) is annoying with time zones, so the by-day .json log is by whatever the time is in UTC, so you may start seeing data not exactly line up with today or yesterday, but if you just want to know roughly what's using the most bandwidth, it may not matter. Just something to keep in mind.
 
