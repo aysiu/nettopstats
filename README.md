@@ -2,7 +2,7 @@
 Accumulates daily outputs of the nettop command
 
 ## What does nettopstats do?
-It basically runs the `nettop` command every 15 seconds and saves the output to one .json file per day.
+It basically runs the `nettop` command every 15 minutes and saves the output to one .json file per day.
 
 ## How does nettopstats differ from other projects?
 I'd love to be proven wrong, but at least as of the creation of nettopstats, it didn't appear that there were any projects that fit the following criteria:
@@ -16,7 +16,7 @@ I'd love to be proven wrong, but at least as of the creation of nettopstats, it 
 - [munkipkg](https://github.com/munki/munki-pkg) (to build the installer package) **If you're not going to use `/usr/bin/python3`, change the path in the `nettopstats` script to wherever your Python 3 is _before_ you build the pkg**
 
 ## How resource-intensive is this?
-I don't know. This project may be a total failure in terms of resources. I've set it to run every 15 seconds. That's quite often, but it's also just doing a very quick dump of `nettop` output, so it may not be resource-intensive at all.
+I don't know. This project may be a total failure in terms of resources. I've set it to run every 15 minutes. That's quite often, but it's also just doing a very quick dump of `nettop` output, so it may not be resource-intensive at all.
 
 ## How do you use nettopstats?
 If you build and install the pkg, it should just run by itself, and then dump out daily .json files to `~/Library/Application Support/nettopstats`.
@@ -24,9 +24,7 @@ If you build and install the pkg, it should just run by itself, and then dump ou
 If you want to analyze the results later, run `/usr/local/bin/nettopstats --analyze daily` or `/usr/local/bin/nettopstats --analyze monthly`.
 
 ## How accurate is this tool?
-Even in theory, not 100% accurate, to be honest. Keep in mind, since it's running every 15 seconds and not all the time in the background, the data may be useful (just to see what processes are using the most bandwidth), but the total bytes in and total bytes out won't precisely reflect actual usage. Some bytes in and out won't be captured fully by a check that happens only every 15 seconds.
-
-From the actual testing I've done so far, the numbers for Google Chrome are wildly inflated, for some reason (hundreds of GB, when it really should be single digits GB), so this seems to be more of a proof-of-concept, at this point.
+I don't know. When I was sampling every 2, 5, 10, or 15 seconds, it seems the numbers were significantly inflated (hundreds of GB instead of single digits of GB), so I don't know exactly how the sampling for `nettop -L 1` works. Currently trying to run only every 15 minutes or so to see if that's closer to actual usage.
 
 Also, standard Python (you can import special libraries) is annoying with time zones, so the by-day .json log is by whatever the time is in UTC, so you may start seeing data not exactly line up with today or yesterday, but if you just want to know roughly what's using the most bandwidth, it may not matter. Just something to keep in mind.
 
