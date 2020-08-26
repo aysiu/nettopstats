@@ -2,7 +2,7 @@
 Accumulates daily outputs of the nettop command
 
 ## What does nettopstats do?
-It basically runs the `nettop` command every 15 minutes and saves the output to one .json file per day.
+It basically runs the `nettop -L 1` command every 15 minutes and saves the output to one .json file per day.
 
 ## How does nettopstats differ from other projects?
 I'd love to be proven wrong, but at least as of the creation of nettopstats, it didn't appear that there were any projects that fit the following criteria:
