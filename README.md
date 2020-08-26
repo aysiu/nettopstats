@@ -16,7 +16,7 @@ I'd love to be proven wrong, but at least as of the creation of nettopstats, it 
 - [munkipkg](https://github.com/munki/munki-pkg) (to build the installer package) **If you're not going to use `/usr/bin/python3`, change the path in the `nettopstats` script to wherever your Python 3 is _before_ you build the pkg**
 
 ## How resource-intensive is this?
-I don't know. This project may be a total failure in terms of resources. I've set it to run every 15 minutes. That's quite often, but it's also just doing a very quick dump of `nettop` output, so it may not be resource-intensive at all.
+Probably not that intensive. Originally, I had it run every few seconds, but that turned out to give widely inaccurate data, and even that didn't seem too resource intensive. Now that the interval is set to every 15 minutes, I highly doubt you'll see any impact at all. No promises, though.
 
 ## How do you use nettopstats?
 If you build and install the pkg, it should just run by itself, and then dump out daily .json files to `~/Library/Application Support/nettopstats`.
